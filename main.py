@@ -6,7 +6,7 @@ from astrbot.core.star.filter.command import CommandFilter
 from .translations import TRANSLATIONS, HIDDEN_CMDS, SUPPORTED_LANGS, UI_TEXT
 
 
-@register("astrbot_plugin_i18n_help", "YourName", "让 /help 支持多语言切换", "1.0.0")
+@register("astrbot_plugin_i18n_help", "lingyun", "让 /help 支持多语言切换", "1.0.0")
 class I18nHelpPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
