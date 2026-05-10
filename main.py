@@ -47,7 +47,7 @@ class I18nHelpPlugin(Star):
         event.stop_event()
 
     @filter.permission_type(filter.PermissionType.ADMIN)
-    @filter.command("lang", priority=10)
+    @filter.command("lang", priority=2)
     async def set_lang(self, event: AstrMessageEvent):
         """切换帮助语言 / Switch language / Переключить язык"""
         lang = await self._get_lang()
