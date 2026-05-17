@@ -39,7 +39,7 @@ class I18nHelpPlugin(Star):
         sep = "━━━━━━━━━━━━━━━━"
         return f"{ui['header']}\n{sep}\n" + "\n".join(lines) + f"\n{sep}\n{ui['footer']}"
 
-    @filter.command("help", priority=10)
+    @filter.command("help", priority=2)
     async def help_cmd(self, event: AstrMessageEvent):
         """显示帮助信息 / Show help / Показать справку"""
         lang = await self._get_lang()
