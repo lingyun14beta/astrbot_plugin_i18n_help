@@ -1,0 +1,6 @@
+{
+  "metadata": {
+    "display_name": "多語言說明",
+    "desc": "讓 /help 指令支援多語言切換（zh / en / ru / ja / fr / zh-tw）"
+  }
+}
