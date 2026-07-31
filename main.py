@@ -3,8 +3,7 @@ import aiohttp
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star
 from astrbot.core.config.default import VERSION
-from astrbot.core.star.star_handler import star_handlers_registry, EventType
-from astrbot.core.star.filter.command import CommandFilter
+from astrbot.core.star import command_management
 from astrbot.core.utils.io import get_dashboard_version
 
 from .translations import TRANSLATIONS, HIDDEN_CMDS, SUPPORTED_LANGS, UI_TEXT
@@ -30,14 +29,16 @@ class I18nHelpPlugin(Star):
         ui = UI_TEXT[lang]
 
         registered = set()
-        for handler in star_handlers_registry:
-            if handler.event_type != EventType.AdapterMessageEvent:
+        try:
+            commands = await command_management.list_commands()
+        except BaseException:
+            commands = []
+        for item in commands:
+            if not item.get("enabled"):
                 continue
-            if not handler.enabled:
-                continue
-            for f in handler.event_filters:
-                if isinstance(f, CommandFilter):
-                    registered.add(f.command_name)
+            name = item.get("current_fragment") or ""
+            if name:
+                registered.add(name)
 
         lines = []
         for cmd, langs in TRANSLATIONS.items():
