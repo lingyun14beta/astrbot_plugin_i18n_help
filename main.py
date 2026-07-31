@@ -33,6 +33,8 @@ class I18nHelpPlugin(Star):
         for handler in star_handlers_registry:
             if handler.event_type != EventType.AdapterMessageEvent:
                 continue
+            if not handler.enabled:
+                continue
             for f in handler.event_filters:
                 if isinstance(f, CommandFilter):
                     registered.add(f.command_name)
