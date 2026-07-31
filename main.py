@@ -1,12 +1,15 @@
+import aiohttp
+
 from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.star import Context, Star, register
+from astrbot.api.star import Context, Star
+from astrbot.core.config.default import VERSION
 from astrbot.core.star.star_handler import star_handlers_registry, EventType
 from astrbot.core.star.filter.command import CommandFilter
+from astrbot.core.utils.io import get_dashboard_version
 
 from .translations import TRANSLATIONS, HIDDEN_CMDS, SUPPORTED_LANGS, UI_TEXT
 
 
-@register("astrbot_plugin_i18n_help", "lingyun", "让 /help 支持多语言切换", "1.0.0")
 class I18nHelpPlugin(Star):
     def __init__(self, context: Context):
         super().__init__(context)
@@ -15,7 +18,15 @@ class I18nHelpPlugin(Star):
         val = await self.get_kv_data("lang", None)
         return val if val in SUPPORTED_LANGS else "zh"
 
-    def _build_help(self, lang: str) -> str:
+    async def _query_notice(self) -> str:
+        try:
+            async with aiohttp.ClientSession(trust_env=True) as session:
+                async with session.get("https://astrbot.app/notice.json", timeout=2) as resp:
+                    return (await resp.json())["notice"]
+        except BaseException:
+            return ""
+
+    async def _build_help(self, lang: str) -> str:
         ui = UI_TEXT[lang]
 
         registered = set()
@@ -37,13 +48,21 @@ class I18nHelpPlugin(Star):
             return ui["no_cmds"]
 
         sep = "━━━━━━━━━━━━━━━━"
-        return f"{ui['header']}\n{sep}\n" + "\n".join(lines) + f"\n{sep}\n{ui['footer']}"
+        body = f"{ui['header']}\n{sep}\n" + "\n".join(lines) + f"\n{sep}\n{ui['footer']}"
+
+        dashboard_version = await get_dashboard_version()
+        version_line = f"AstrBot v{VERSION}(WebUI: {dashboard_version})"
+        notice = await self._query_notice()
+        msg = f"{version_line}\n\n{body}"
+        if notice:
+            msg += f"\n\n{notice}"
+        return msg
 
     @filter.command("help", priority=2)
     async def help_cmd(self, event: AstrMessageEvent):
         """显示帮助信息 / Show help / Показать справку"""
         lang = await self._get_lang()
-        yield event.plain_result(self._build_help(lang))
+        yield event.plain_result(await self._build_help(lang))
         event.stop_event()
 
     @filter.permission_type(filter.PermissionType.ADMIN)
