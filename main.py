@@ -4,6 +4,7 @@ from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star
 from astrbot.core.config.default import VERSION
 from astrbot.core.star import command_management
+from astrbot.core.star.star import star_map
 from astrbot.core.utils.io import get_dashboard_version
 
 from .translations import TRANSLATIONS, HIDDEN_CMDS, SUPPORTED_LANGS, UI_TEXT
@@ -35,6 +36,9 @@ class I18nHelpPlugin(Star):
             commands = []
         for item in commands:
             if not item.get("enabled"):
+                continue
+            module_path = item.get("module_path")
+            if module_path and module_path in star_map and not star_map[module_path].activated:
                 continue
             name = item.get("current_fragment") or ""
             if name:
