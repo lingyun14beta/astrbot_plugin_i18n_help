@@ -3,8 +3,9 @@ import aiohttp
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star
 from astrbot.core.config.default import VERSION
-from astrbot.core.star import command_management
 from astrbot.core.star.star import star_map
+from astrbot.core.star.star_handler import star_handlers_registry, EventType
+from astrbot.core.star.filter.command import CommandFilter
 from astrbot.core.utils.io import get_dashboard_version
 
 from .translations import TRANSLATIONS, HIDDEN_CMDS, SUPPORTED_LANGS, UI_TEXT
@@ -30,19 +31,15 @@ class I18nHelpPlugin(Star):
         ui = UI_TEXT[lang]
 
         registered = set()
-        try:
-            commands = await command_management.list_commands()
-        except BaseException:
-            commands = []
-        for item in commands:
-            if not item.get("enabled"):
+        for handler in star_handlers_registry:
+            if handler.event_type != EventType.AdapterMessageEvent:
                 continue
-            module_path = item.get("module_path")
-            if module_path and module_path in star_map and not star_map[module_path].activated:
+            plugin = star_map.get(handler.handler_module_path)
+            if plugin and not plugin.activated:
                 continue
-            name = item.get("current_fragment") or ""
-            if name:
-                registered.add(name)
+            for f in handler.event_filters:
+                if isinstance(f, CommandFilter):
+                    registered.add(f.command_name)
 
         lines = []
         for cmd, langs in TRANSLATIONS.items():
