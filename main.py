@@ -6,7 +6,16 @@ from astrbot.core.config.default import VERSION
 from astrbot.core.star.star import star_map
 from astrbot.core.star.star_handler import star_handlers_registry, EventType
 from astrbot.core.star.filter.command import CommandFilter
-from astrbot.core.utils.io import get_dashboard_version
+
+try:
+    from astrbot.core.dashboard_assets import get_dashboard_version
+    HAS_DASHBOARD_VERSION = True
+except ImportError:
+    try:
+        from astrbot.core.utils.io import get_dashboard_version
+        HAS_DASHBOARD_VERSION = True
+    except ImportError:
+        HAS_DASHBOARD_VERSION = False
 
 from .translations import TRANSLATIONS, HIDDEN_CMDS, SUPPORTED_LANGS, UI_TEXT
 
@@ -54,8 +63,15 @@ class I18nHelpPlugin(Star):
         sep = "━━━━━━━━━━━━━━━━"
         body = f"{ui['header']}\n{sep}\n" + "\n".join(lines) + f"\n{sep}\n{ui['footer']}"
 
-        dashboard_version = await get_dashboard_version()
-        version_line = f"AstrBot v{VERSION}(WebUI: {dashboard_version})"
+        if HAS_DASHBOARD_VERSION:
+            try:
+                dashboard_version = await get_dashboard_version()
+            except BaseException:
+                dashboard_version = None
+        else:
+            dashboard_version = None
+        dashboard_line = f"(WebUI: {dashboard_version})" if dashboard_version else ""
+        version_line = f"AstrBot v{VERSION}{dashboard_line}"
         notice = await self._query_notice()
         msg = f"{version_line}\n\n{body}"
         if notice:
